@@ -1,3 +1,25 @@
+Jenkins
+===========
+
+Jenkins is a CICD Tools which helps you to perform CI and CD Operations in a efficient manner.
+You can configure any tools which is required to your application can directly attach to jenkins via Plugin and download to jenkins server.
+
+#### If you want to configure any plugin for global uses
+`Jenkins UI -> Manage Jenkins -> Global Tool Configuration`
+
+#### If you want to download any plugin 
+`Jenkins UI -> Manage Jenkins -> Manage Plugin`
+
+#### If you want to configure any tool to jenkins server
+1. Login to Your Jenkins Server as root user. If you are using jenkins as docker container, then run this
+    `docker exec -it -u 0 <container-name> bash` 
+2. Identify the Linux used by jenkins using
+    `cat /etc/os-release` or `cat /etc/issue`
+3. Download Required Tools that you want to configure to jenkins using applicable package manager like
+    `apt install <package>` or `yum install <package>` or any other method you want to use.
+4. Download Required Plugin on Jenkins so Go To `Jenkins UI -> Manage Jenkins -> Manage Plugin`
+    For use them in your project. First Configure the plugins under `Jenkins UI -> Manage Jenkins -> Global Tool Configuration`
+
 Build Java Project
 =======================
 
