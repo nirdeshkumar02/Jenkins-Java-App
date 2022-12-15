@@ -20,7 +20,7 @@ You can configure any tools which is required to your application can directly a
 4. Download Required Plugin on Jenkins so Go To `Jenkins UI -> Manage Jenkins -> Manage Plugin`
     For use them in your project. First Configure the plugins under `Jenkins UI -> Manage Jenkins -> Global Tool Configuration`
     
-FreeStyle project for test and build the Java Application
+FreeStyle project for test, build and dockerized the Java Application
 ============================================================
 1. Go To `Jenkins UI -> Dashboard -> New Item` Give a name to your job and select `FreeStyle Project` then Press Ok.
 
@@ -41,6 +41,7 @@ FreeStyle project for test and build the Java Application
     ```
         chmod +x freestyle-build.sh
         ./freestyle-build.sh
+        docker build -t jenkins-java-app .
     ```
 
 8. Now, Apply and Save it.
