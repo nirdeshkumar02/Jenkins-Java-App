@@ -20,8 +20,8 @@ You can configure any tools which is required to your application can directly a
 4. Download Required Plugin on Jenkins so Go To `Jenkins UI -> Manage Jenkins -> Manage Plugin`
     For use them in your project. First Configure the plugins under `Jenkins UI -> Manage Jenkins -> Global Tool Configuration`
     
-FreeStyle project for test, build and dockerized the Java Application
-============================================================
+FreeStyle project for test, build, dockerized, and pushed to docker hub the Java Application
+=================================================================================================
 1. Go To `Jenkins UI -> Dashboard -> New Item` Give a name to your job and select `FreeStyle Project` then Press Ok.
 
 2. Go To `Source Code Management` Configure Git by providing "Repository Url" and "Branch".
@@ -37,18 +37,26 @@ FreeStyle project for test, build and dockerized the Java Application
 
 6. Add Another build step of maven and now add "package" in goals.
 
-7. Add Another Build Step of type "Execute shell" and inside command box type
+7. Add Docker Hub Creds inside `Jenkins UI -> Manage Jenkins -> Manage Credential -> Stores scoped to Jenkins (domains) -> Add Credential`
+
+8. Create Repository at Docker Hub to push the image inside docker hub repo.
+
+9. Choose "Use secret text(s) or file(s)" Under `Build Environment` in Configure job and Add "USERNAME" and "PASSWORD" value to username variable, password variable respectively and choose docker credential value to credential.
+
+10. Add Another Build Step of type "Execute shell" and inside command box type
     ```
-        chmod +x freestyle-build.sh
-        ./freestyle-build.sh
-        docker build -t jenkins-java-app .
+    chmod +x freestyle-build.sh
+    ./freestyle-build.sh
+    docker build -t nirdeshkumar02/jenkins-java-app:jma-1 .
+    docker login -u $USERNAME -p $PASSWORD 
+    docker push nirdeshkumar02/jenkins-java-app:jma-1
     ```
 
-8. Now, Apply and Save it.
+11. Now, Apply and Save it.
 
-9. Now, Click now Build Now and You will check output by click the job name on the same page.
+12. Now, Click now Build Now and You will check output by click the job name on the same page.
 
-10. Done FreeStyle project for test and build the Java Application.
+13. Done FreeStyle project for test and build the Java Application.
 
 Build Java Project
 =======================
