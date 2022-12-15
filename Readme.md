@@ -1,3 +1,54 @@
+Jenkins
+===========
+
+Jenkins is a CICD Tools which helps you to perform CI and CD Operations in a efficient manner.
+You can configure any tools which is required to your application can directly attach to jenkins via Plugin and download to jenkins server.
+
+#### If you want to configure any plugin for global uses
+`Jenkins UI -> Manage Jenkins -> Global Tool Configuration`
+
+#### If you want to download any plugin 
+`Jenkins UI -> Manage Jenkins -> Manage Plugin`
+
+#### If you want to configure any tool to jenkins server
+1. Login to Your Jenkins Server as root user. If you are using jenkins as docker container, then run this
+    `docker exec -it -u 0 <container-name> bash` 
+2. Identify the Linux used by jenkins using
+    `cat /etc/os-release` or `cat /etc/issue`
+3. Download Required Tools that you want to configure to jenkins using applicable package manager like
+    `apt install <package>` or `yum install <package>` or any other method you want to use.
+4. Download Required Plugin on Jenkins so Go To `Jenkins UI -> Manage Jenkins -> Manage Plugin`
+    For use them in your project. First Configure the plugins under `Jenkins UI -> Manage Jenkins -> Global Tool Configuration`
+    
+FreeStyle project for test and build the Java Application
+============================================================
+1. Go To `Jenkins UI -> Dashboard -> New Item` Give a name to your job and select `FreeStyle Project` then Press Ok.
+
+2. Go To `Source Code Management` Configure Git by providing "Repository Url" and "Branch".
+
+3. Choose your vcs credential (gitlab, github), If not shown, You need to add your creds to jenkins first.
+
+3. Go To `Build Step` and Add `Invoke top-level Maven targets`.
+
+4. If above value not showing in dropdown of build step, then You need need to configure maven first under 
+    `Jenkins UI -> Manage Jenkins -> Global Tool Configuration`.
+
+5. Inside the Maven Build Step, Choose your maven and add "test" in goals.
+
+6. Add Another build step of maven and now add "package" in goals.
+
+7. Add Another Build Step of type "Execute shell" and inside command box type
+    ```
+        chmod +x freestyle-build.sh
+        ./freestyle-build.sh
+    ```
+
+8. Now, Apply and Save it.
+
+9. Now, Click now Build Now and You will check output by click the job name on the same page.
+
+10. Done FreeStyle project for test and build the Java Application.
+
 Build Java Project
 =======================
 
