@@ -2,8 +2,19 @@
 
 // Now We are using script.groovy and jenkins shared library together. Just focus on the code written here
 
-// Importing Library which is globally available to Jenkins
-@Library('Jenkins-Shared-Library')_
+// Importing Library which is globally available to Jenkins -----------------------
+
+// @Library('Jenkins-Shared-Library')_
+
+// Importing Jenkins Shared Library Directly to Jenkinsfile -----------------------
+
+library identifier: 'Jenkins-Shared-Library@master', retriever: modernSCM(
+    [$class: 'GitSCMSource',
+    remote: 'https://github.com/nirdeshkumar02/Jenkins-Shared-Library.git',
+    credentialsId: 'github-creds'
+    ]
+)
+
 def gv
 
 pipeline {
