@@ -30,7 +30,9 @@ pipeline {
             steps {
                 script {
                     // buildImage()
-                    buildImage 'nirdeshkumar02/jenkins-java-app:jma-4'
+                    buildImage 'nirdeshkumar02/jenkins-java-app:jma-5'
+                    dockerLogin()
+                    dockerPush 'nirdeshkumar02/jenkins-java-app:jma-5'
                 }
             }
         }
