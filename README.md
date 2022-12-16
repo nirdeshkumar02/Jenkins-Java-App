@@ -58,6 +58,104 @@ FreeStyle project for test, build, dockerized, and pushed to docker hub the Java
 
 13. Done FreeStyle project for test and build the Java Application.
 
+Jenkinsfile Structure
+=========================
+
+```
+CODE_CHANGES = getGitChanges() # callingfunction which checks code changes
+pipeline {
+    agent none
+    # Aceess build tools - only 3 available gradle, maven and jdk, these have to pre configured in jenkins ui
+    tools {
+        maven/gradle/jdk 'Maven/Gradle'
+    }
+    parameters {
+        string(name: "Version", defaultValue: "", description: "versiion to deploy")
+        choice(name: "VERSION", choices: ["1.1.0", "1.3.0"], description: "versiion to deploy")
+        booleanParam(name: "executeTests", defaultValue: true, description: "versiion to deploy")
+    }
+    environment {
+        NEW_VERSION = '1.2.0'
+        SERVER_CREDS = credentials('credential-id') # it will bind the jenkins creds to jenkinsfile. for that add "crdential binding plugin to jenkins"
+    }
+    stages {
+        stage('build') {
+            when {
+                expressiion {
+                    BRANCH_NAME == "dev" || CODE_CHANGES == true
+                }
+            }
+            steps {
+                script {
+                    echo "Building version ${NEW_VERSION} the application..."
+                }
+            }
+        }
+        stage('test') {
+            when {
+                expressiion {
+                    BRANCH_NAME == "dev" || BRANCH_NAME == 'master' || params.executeTests == true  # Refrencing Parameter
+                }
+            }
+            steps {
+                script {
+                    echo "Testing the application..."
+                }
+            }
+        }
+        stage('deploy') {
+            steps {
+                script {
+                    echo "Deploying the application..."
+
+                    # This will helpful if you have to provide creds only in single stage.
+                    or withCredentials ([
+                        usernamePassword( credentials: 'credentialId', usernameVariable: USER, passwordVariable: PWD)
+                    ]) {
+                        sh "some script ${USER} ${PWD}"
+                    }
+
+                    # Defining in environment, mostly used when you have to use them in multi stage.
+                    echo "Deploying with ${SERVER_CREDS}"
+                    sh "{SERVER_CREDS}"
+
+                    echo "Deploying version ${params.VERSION}" # Refrecing Parameter
+                }
+            }
+        }
+    }
+    post {
+        # Post conditions: always, success, failure
+        always {
+            task like sending email whethere build failed or success in every situation
+        }
+        success {
+            do something when build success
+        }
+    }
+}
+
+```
+
+Pipeline project for test, build, dockerized, and pushed to docker hub the Java Application
+=================================================================================================
+
+Pipeline Projects are Scripted so, unlike to configure all steps as in freestyle, 
+    You need to write script for all the steps, you wanna add to your pipeline project.
+
+1. Go To `Jenkins UI -> Dashboard -> New Item` Give a name to your job and select `Pipeline Project` then Press Ok.
+
+2. Go To `Pipeline` Choose your definition to build Pipeline `Pipeline Script from SCM`.
+    Pipeline Script - Gives You Possibility to write your script in Jenkins UI.
+    Pipeline Script for SCM - You can provide your Jenkinsfile path located in your Source Code.
+    If You don't know about how to write script then Choose Pipeline Syntax. 
+
+3. Add your github repo url, branch and its credential to configure pipeline job. 
+
+4. Apply and Save.
+
+5. Build Now.
+
 Build Java Project
 =======================
 
