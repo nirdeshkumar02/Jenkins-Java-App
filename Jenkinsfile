@@ -29,7 +29,8 @@ pipeline {
         stage("build and push image") {
             steps {
                 script {
-                    buildImage()
+                    // buildImage()
+                    buildImage 'nirdeshkumar02/jenkins-java-app:jma-4'
                 }
             }
         }
