@@ -1,3 +1,9 @@
+#!/usr/bin/env groovy
+
+// Now We are using script.groovy and jenkins shared library together. Just focus on the code written here
+
+// Importing Library which is globally available to Jenkins
+@Library('Jenkins-Shared-Library')_
 def gv
 
 pipeline {
@@ -16,14 +22,14 @@ pipeline {
         stage("build jar") {
             steps {
                 script {
-                    gv.buildJar()
+                    buildJar()
                 }
             }
         }
-        stage("build image") {
+        stage("build and push image") {
             steps {
                 script {
-                    gv.buildImage()
+                    buildImage()
                 }
             }
         }
