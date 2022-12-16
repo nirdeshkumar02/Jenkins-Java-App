@@ -160,6 +160,19 @@ Pipeline Projects are Scripted so, unlike to configure all steps as in freestyle
 
 5. Build Now.
 
+Jenkins Credential scope
+===========================
+1. Global (Jenkins nodes, items, all child item)
+2. System (Jenkins and Nodes Only)
+
+Jenkins Credential types
+===========================
+1. Username password
+2. Secret Text
+3. Secret file
+4. SSH Username with Private key
+5. Certificate
+
 Build Java Project
 =======================
 
