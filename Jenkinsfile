@@ -41,9 +41,9 @@ pipeline {
             steps {
                 script {
                     // buildImage()
-                    buildImage 'nirdeshkumar02/jenkins-java-app:jma-5'
+                    buildImage 'nirdeshkumar02/jenkins-java-app:jma-6'
                     dockerLogin()
-                    dockerPush 'nirdeshkumar02/jenkins-java-app:jma-5'
+                    dockerPush 'nirdeshkumar02/jenkins-java-app:jma-6'
                 }
             }
         }
