@@ -119,7 +119,11 @@ pipeline {
                     echo "Deploying with ${SERVER_CREDS}"
                     sh "{SERVER_CREDS}"
 
+                    # Input Parameter froom user
+                    env.ENV = input message: "Select the environment to deploy to", ok: "Done", parameters: [choice(name: 'ONE', choices: ['dev', 'staging', 'prod'], description: '')]
+
                     echo "Deploying version ${params.VERSION}" # Refrecing Parameter
+                    echo "Deploying to ${ENV}"
                 }
             }
         }
