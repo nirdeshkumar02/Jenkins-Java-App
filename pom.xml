@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.example</groupId>
-    <artifactId>java-maven-app</artifactId>
+    <artifactId>jenkins-java-app</artifactId>
     <version>1.1.7</version>
 
     <build>

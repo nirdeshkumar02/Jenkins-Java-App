@@ -1,58 +1,66 @@
 #!/usr/bin/env groovy
 
-// Now We are using script.groovy and jenkins shared library together. Just focus on the code written here
-
-// Importing Library which is globally available to Jenkins -----------------------
-
-// @Library('Jenkins-Shared-Library')_
-
-// Importing Jenkins Shared Library Directly to Jenkinsfile -----------------------
-
-library identifier: 'Jenkins-Shared-Library@master', retriever: modernSCM(
-    [$class: 'GitSCMSource',
-    remote: 'https://github.com/nirdeshkumar02/Jenkins-Shared-Library.git',
-    credentialsId: 'github-creds'
-    ]
-)
-
-def gv
-
 pipeline {
     agent any
     tools {
         maven 'Maven'
     }
     stages {
-        stage("init") {
+        stage('increment version') {
             steps {
                 script {
-                    gv = load "script.groovy"
+                    echo 'incrementing app version...'
+                    sh 'mvn build-helper:parse-version versions:set \
+                        -DnewVersion=\\\${parsedVersion.majorVersion}.\\\${parsedVersion.minorVersion}.\\\${parsedVersion.nextIncrementalVersion} \
+                        versions:commit'
+                    def matcher = readFile('pom.xml') =~ '<version>(.+)</version>'
+                    def version = matcher[0][1]
+                    env.IMAGE_NAME = "$version-$BUILD_NUMBER"
                 }
             }
         }
-        stage("build jar") {
+        stage('build app') {
             steps {
                 script {
-                    buildJar()
+                    echo "building the application..."
+                    sh 'mvn clean package'
                 }
             }
         }
-        stage("build and push image") {
+        stage('build image') {
             steps {
                 script {
-                    // buildImage()
-                    buildImage 'nirdeshkumar02/jenkins-java-app:jma-6'
-                    dockerLogin()
-                    dockerPush 'nirdeshkumar02/jenkins-java-app:jma-6'
+                    echo "building the docker image..."
+                    withCredentials([usernamePassword(credentialsId: 'docker-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                        sh "docker build -t nirdeshkumar02/jenkins-java-app:${IMAGE_NAME} ."
+                        sh "echo $PASS | docker login -u $USER --password-stdin"
+                        sh "docker push nirdeshkumar02/jenkins-java-app:${IMAGE_NAME}"
+                    }
                 }
             }
         }
-        stage("deploy") {
+        stage('deploy') {
             steps {
                 script {
-                    gv.deployApp()
+                    echo 'deploying docker image to EC2...'
                 }
             }
         }
+        // stage('commit version update') {
+        //     steps {
+        //         script {
+        //             withCredentials([usernamePassword(credentialsId: 'github-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+        //                 // git config here for the first time run
+        //                 sh 'git config --global user.email "jenkins@example.com"'
+        //                 sh 'git config --global user.name "jenkins"'
+
+        //                 sh "git remote set-url origin https://${USER}:${PASS}@gitlab.com/nanuchi/java-maven-app.git"
+        //                 sh 'git add .'
+        //                 sh 'git commit -m "ci: version bump"'
+        //                 sh 'git push origin HEAD:jenkins-jobs'
+        //             }
+        //         }
+        //     }
+        // }
     }
 }
