@@ -175,10 +175,55 @@ Jenkins Shared Library is a way to integrate the common logic all over the pipel
 It is an extension to pipeline and written in groovy.
 
 1. Create a repository for jenkins shared library where you have common code.
-2. Make It available to jenkins so that you can retreive it to multiple pipeline at locaton 
+2. Make It available to jenkins so that you can retreive it to multiple pipeline at locaton.
     `Jenkins UI -> Manage Jenkins -> Manage System ->  Global Pipeline Libraries`
-3. Now Use Shared Library to Jenkinsfile by importing
+3. Now Use Shared Library to Jenkinsfile by importing.
     `@Library('name given during adding jenkins shared library to jenkins')`
+4. Or If You can directly use Jenkins Shared Libraries to Jenkinsfile without adding them to Jenkins UI like. 
+    ```
+        library identifier: 'jenkins-shared-library@master', retriever: modernSCM(
+        [$class: 'GitSCMSource',
+         remote: 'https://github.com/nirdeshkumar02/Jenkins-Shared-Library.git',
+         credentialsId: 'github-creds'
+        ])
+    ```
+
+Trigger Build If Any Changes Push to repo Automatically
+=========================================================
+
+For GitHub Repositories
+
+1. Install `GitHub Plugin` plugin on jenkins.
+2. Go to `Manage Jenkins -> Configure System -> Locate GitHub` Section and `Add Github Server`.
+3. Now do this modification -
+    ```
+    API URL - For Github.com - https://api.github.com, For Github Enterprise - https://ghe.acme.com/api/v3/
+    Credential - Create Your Personal Access Token on Github.com with their scops usecases and Add them to jenkins.
+    Test Connection
+    ```
+4. Personal Access Token can be created at location - github.com/settings/tokens/new
+5. Configure Jenkins Jobs on which you want push trigger automatically.
+    ```
+    Create a pipeline project -> In General, Check Github project and add the repo url -> In SCM, Choose Git add repo and branch 
+    -> In Build Trigger, Check Github hook trigger for GitSCM Polling.
+
+    Now, Go to your Github Repo -> Setting -> Webhook -> Add the webhook as Url will be Jenkins URL, Secret will be empty and Choose the scope.
+    ```
+6. Apply and save
+
+Automatic Virsioning in Jenkins
+================================
+Major.Minor.Patch
+When You Release a new version of software or application then you need to increase the version according the type of release whether it is major, minor or patch.
+
+#### To update the version of Maven Project, Use this command.
+
+```
+mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion} versions:commit
+
+Upgrade patch version then use - nextIncrementalVersion as used in above command
+Upgrade Minor Version - nextminorVersion
+```
 
 Build Java Project
 =======================
