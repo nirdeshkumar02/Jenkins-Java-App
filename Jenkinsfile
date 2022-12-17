@@ -46,21 +46,21 @@ pipeline {
                 }
             }
         }
-        // stage('commit version update') {
-        //     steps {
-        //         script {
-        //             withCredentials([usernamePassword(credentialsId: 'github-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-        //                 // git config here for the first time run
-        //                 sh 'git config --global user.email "jenkins@example.com"'
-        //                 sh 'git config --global user.name "jenkins"'
+        stage('commit version update') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'github-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                        // git config here for the first time run
+                        sh 'git config --global user.email "jenkins@example.com"'
+                        sh 'git config --global user.name "jenkins"'
 
-        //                 sh "git remote set-url origin https://${USER}:${PASS}@gitlab.com/nanuchi/java-maven-app.git"
-        //                 sh 'git add .'
-        //                 sh 'git commit -m "ci: version bump"'
-        //                 sh 'git push origin HEAD:jenkins-jobs'
-        //             }
-        //         }
-        //     }
-        // }
+                        sh "git remote set-url origin https://${USER}:${PASS}@github.com/nirdeshkumar02/Jenkins-Java-App.git"
+                        sh 'git add .'
+                        sh 'git commit -m "ci: version bump"'
+                        sh 'git push origin HEAD:versioning-pipeline'
+                    }
+                }
+            }
+        }
     }
 }
