@@ -229,6 +229,8 @@ Deployed New Version to Ec2
 ===============================
 
 1. Download the plugin "SSH" on Jenkins Ui.
+2. Create Global credential by using SSH Username and Private Key (Put Pem data to creds).
+3. Now, Run Docker run command directly in jenkinsfile or use dockerfile.
 
 Build Java Project
 =======================
