@@ -46,7 +46,7 @@ pipeline {
                     def dockerCmd = "docker run -p 3080:3080 -d nirdeshkumar02/jenkins-java-app:${IMAGE_NAME}"
                     def shellCmd = "bash ./server-cmds.sh ${IMAGE_NAME}"
                     def ec2Instance = "ec2-user@35.173.232.192"
-
+                    //  First You need to login to docker on ec2-server else you can login here with above steps
                     sshagent(['ec2-server-key']) {
                         sh "scp -o StrictHostKeyChecking=no server-cmds.sh ${ec2Instance}:/home/ec2-user"
                         sh "scp -o StrictHostKeyChecking=no docker-compose.yaml ${ec2Instance}:/home/ec2-user"
