@@ -53,6 +53,7 @@ pipeline {
                         sh "ssh -o StrictHostKeyChecking=no ${ec2Instance} ${shellCmd}"
                         // sh "ssh -o StrictHostKeyChecking=no ${ec2Instance} ${dockerCmd}"
 
+                    }
                 }
             }
         }
