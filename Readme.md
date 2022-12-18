@@ -225,6 +225,11 @@ Upgrade patch version then use - nextIncrementalVersion as used in above command
 Upgrade Minor Version - nextminorVersion
 ```
 
+Deployed New Version to Ec2
+===============================
+
+1. Download the plugin "SSH" on Jenkins Ui.
+
 Build Java Project
 =======================
 

@@ -43,24 +43,33 @@ pipeline {
             steps {
                 script {
                     echo 'deploying docker image to EC2...'
-                }
-            }
-        }
-        stage('commit version update') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'github-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-                        // git config here for the first time run
-                        sh 'git config --global user.email "jenkins@example.com"'
-                        sh 'git config --global user.name "jenkins"'
 
-                        sh "git remote set-url origin https://${USER}:${PASS}@github.com/nirdeshkumar02/Jenkins-Java-App.git"
-                        sh 'git add .'
-                        sh 'git commit -m "ci: version bump"'
-                        sh 'git push origin HEAD:versioning-pipeline'
-                    }
+                    def shellCmd = "bash ./server-cmds.sh ${IMAGE_NAME}"
+                    def ec2Instance = "ec2-user@35.173.232.192"
+
+                    sshagent(['ec2-server-key']) {
+                        sh "scp -o StrictHostKeyChecking=no server-cmds.sh ${ec2Instance}:/home/ec2-user"
+                        sh "scp -o StrictHostKeyChecking=no docker-compose.yaml ${ec2Instance}:/home/ec2-user"
+                        sh "ssh -o StrictHostKeyChecking=no ${ec2Instance} ${shellCmd}"
+
                 }
             }
         }
+        // stage('commit version update') {
+        //     steps {
+        //         script {
+        //             withCredentials([usernamePassword(credentialsId: 'github-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+        //                 // git config here for the first time run
+        //                 sh 'git config --global user.email "jenkins@example.com"'
+        //                 sh 'git config --global user.name "jenkins"'
+
+        //                 sh "git remote set-url origin https://${USER}:${PASS}@github.com/nirdeshkumar02/Jenkins-Java-App.git"
+        //                 sh 'git add .'
+        //                 sh 'git commit -m "ci: version bump"'
+        //                 sh 'git push origin HEAD:versioning-pipeline'
+        //             }
+        //         }
+        //     }
+        // }
     }
 }
