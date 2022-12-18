@@ -44,7 +44,7 @@ pipeline {
                 script {
                     echo 'deploying docker image to EC2...'
                     def dockerCmd = "docker run -p 3080:3080 -d nirdeshkumar02/jenkins-java-app:${IMAGE_NAME}"
-                    def shellCmd = "bash ./server-cmds.sh ${IMAGE_NAME}"
+                    def shellCmd = "bash ./server-cmds.sh nirdeshkumar02/jenkins-java-app:${IMAGE_NAME}"
                     def ec2Instance = "ubuntu@52.91.71.254"
                     //  First You need to login to docker on ec2-server else you can login here with above steps
                     sshagent(['ec2-server-key']) {
