@@ -232,8 +232,8 @@ Deployed New Version to Ec2
 2. Create Global credential by using SSH Username and Private Key (Put Pem data to creds).
 3. Now, Run Docker run command directly in jenkinsfile or use dockerfile.
 
-Deploy Application to EKS Using Jenkins
-========================================
+Deploy Application to EKS Using Jenkins with Docker Hub
+==========================================================
 1. Create a folder where you can have your kubernetes configuration file.
     ```
     folder - kubernetes
