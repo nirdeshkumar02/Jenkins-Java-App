@@ -232,6 +232,61 @@ Deployed New Version to Ec2
 2. Create Global credential by using SSH Username and Private Key (Put Pem data to creds).
 3. Now, Run Docker run command directly in jenkinsfile or use dockerfile.
 
+Deploy Application to EKS Using Jenkins
+========================================
+1. Create a folder where you can have your kubernetes configuration file.
+    ```
+    folder - kubernetes
+    files - deployment.yaml, service.yaml
+    ```
+2. Install gettext-base package to the jenkins server so that you can pass your jenkinsfile envs to k8s yaml file.
+    ```
+    apt install gettext-base
+    ```
+3. Add AWS Creds of Jenkins User on Jenkins UI for AWS Account Authentication.
+    ```
+    Create an AWS IAM User as Jenkins User with limited policy.
+    Download Jenkins AWS User Creds.
+    Create Global Creds inside Jenkins UI. Dashboard -> Manage Server -> Manage Creds -> Global as Secret Text
+    ```
+4. Create AWS EKS Cluster with Node Group.
+5. Inside Jenkins Server, Install aws cli, AWS IAM Authenticator and kubectl. 
+    ```
+    For aws-cli - https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+    For aws-iam-authenticator - https://docs.aws.amazon.com/eks/latest/userguide/install-aws-iam-authenticator.html
+    For kubectl - https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
+    ```
+6. Configure Jenkins User aws creds and also configure your cluster as kubeconfig.
+    ```
+    Run command for aws-configure - aws configure
+    For kubeconfig - https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html
+
+    to test run "kubectl get nodes"
+    ```
+7. Inside the JenkinsFile, Add an step for deployment to kubernetes.
+8. Good Practice Code which add to above steps -
+    ```
+    stage('deploy') {
+        environment {
+            APP_NAME = 'jenkins-java-app'
+            AWS_ACCESS_KEY = credentials('aws_access_key')  --- add this creds to jenkins as secret text
+            AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key') --- add this creds to jenkins as secret text
+        }
+        steps {
+            script {
+                echo "deploying docker image to aws eks"
+                sh 'envsubst < kubernetes/deployment.yaml | kubectl apply -f -' 
+                sh 'envsubst < kubernetes/service.yaml | kubectl apply -f -' 
+            }
+        }
+    }
+    ```
+9. Create a secret for docker registry inside jenkins server so that it can access the image from private repo.
+    ```
+    kubectl create secret docker-registry <secretName used in deployment> --docker-server=docker.io --docker-username=<username> --docker-password=<password> 
+    ```
+10. Push this changes to github and Run the Jenkins Pipeline.
+
 Build Java Project
 =======================
 
@@ -300,3 +355,5 @@ Add this to your pom.xml under project
 
 Build the jar - `mvn package`
 Publish to Nexus - `mvn deploy`
+
+
