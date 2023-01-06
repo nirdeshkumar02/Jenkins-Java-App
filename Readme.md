@@ -232,8 +232,8 @@ Deployed New Version to Ec2
 2. Create Global credential by using SSH Username and Private Key (Put Pem data to creds).
 3. Now, Run Docker run command directly in jenkinsfile or use dockerfile.
 
-Deploy Application to EKS Using Jenkins
-========================================
+Deploy Application to EKS Using Jenkins with Docker Hub
+==========================================================
 1. Create a folder where you can have your kubernetes configuration file.
     ```
     folder - kubernetes
@@ -286,6 +286,33 @@ Deploy Application to EKS Using Jenkins
     kubectl create secret docker-registry <secretName used in deployment> --docker-server=docker.io --docker-username=<username> --docker-password=<password> 
     ```
 10. Push this changes to github and Run the Jenkins Pipeline.
+
+Deploy Application to EKS Using Jenkins with ECR
+==========================================================
+- All the steps are same as with pipeline "deploy-to-eks-pipeline". 
+- Just change the steps of "build image", and respective changes to step "deploy to k8s" 
+
+1. Create an Private ECR Repository on AWS.
+2. Create Credential in Jenkins for ECR.
+    ```
+    To get Password, Run Command - aws ecr get-login-password --region <repository region>
+    Go To Jenkins Server -> Manage Jenkins -> Manage Credential -> Add a global credential for ecr where -
+        Username - AWS 
+        Password - <text-from-above-command>
+    ```
+3. Create Secret for ECR in Jenkins Server as did with docker.
+    ```
+    kubectl create secret docker-registry aws-registry-key --docker-server=<"accountId".dkr.ecr.<repo-region>.amazonaws.com> --docker-username=AWS --docker-password=<text copied from step 2>
+    ```
+4. Add the above created secret inside k8s deployment file.
+    ```
+    imagePullSecrets:
+    - name: aws-ecr-registry-key
+
+    and
+    image: ${IMAGE_REPO}:${IMAGE_NAME}
+    ```
+5. Update the JenkinsFile.
 
 Build Java Project
 =======================
