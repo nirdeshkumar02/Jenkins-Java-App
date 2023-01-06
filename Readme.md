@@ -383,4 +383,3 @@ Add this to your pom.xml under project
 Build the jar - `mvn package`
 Publish to Nexus - `mvn deploy`
 
-
