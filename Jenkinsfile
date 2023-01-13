@@ -5,10 +5,6 @@ pipeline {
     tools {
         maven 'Maven'
     }
-    environment {
-        ECR_REPO_URL = '626170306581.dkr.ecr.us-east-1.amazonaws.com'
-        IMAGE_REPO = "${ECR_REPO_URL}/jenkins-java-app"
-    }
     stages {
         stage('increment version') {
             steps {
@@ -35,10 +31,10 @@ pipeline {
             steps {
                 script {
                     echo "building the docker image..."
-                    withCredentials([usernamePassword(credentialsId: '	ecr_creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-                        sh "docker build -t ${IMAGE_REPO}:${IMAGE_NAME} ."
-                        sh "echo $PASS | docker login -u $USER --password-stdin ${ECR_REPO_URL}"
-                        sh "docker push ${IMAGE_REPO}:${IMAGE_NAME}"
+                    withCredentials([usernamePassword(credentialsId: 'docker_creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                        sh "docker build -t nirdeshkumar02/jenkins-java-app:${IMAGE_NAME} ."
+                        sh "echo $PASS | docker login -u $USER --password-stdin"
+                        sh "docker push nirdeshkumar02/jenkins-java-app:${IMAGE_NAME}"
                     }
                 }
             }
@@ -49,6 +45,7 @@ pipeline {
                 AWS_ACCESS_KEY = credentials('aws_access_key')
                 AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key')
             }
+            // Not Good Practice
             steps {
                 script {
                     echo "deploying docker image to aws eks"
@@ -56,6 +53,19 @@ pipeline {
                     sh 'envsubst < kubernetes/service.yaml | kubectl apply -f -' // envsubst is helpful to pass env vars to k8s yaml file
                 }
             }
+            // Best Practice Using KubeConfig
+            // steps {
+            //     script {
+            //         echo "deploying docker image to aws eks"
+            //         withKubeConfig([credentialsId: 'k8s-credentials', serverUrl: 'https://7293fae4-4c9d-4629-bc82-262d0a2b8e3c.eu-central-2.linodelke.net']) {
+            //             withCredentials([usernamePassword(credentialsId: 'docker_creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+            //                 sh "kubectl create secret docker-registry my-registry-key --docker-server=docker.io --docker-username=$USER --docker-password=$PASS"
+            //             }
+            //             sh 'envsubst < kubernetes/deployment.yaml | kubectl apply -f -' // envsubst is helpful to pass env vars to k8s yaml file
+            //             sh 'envsubst < kubernetes/service.yaml | kubectl apply -f -' // envsubst is helpful to pass env vars to k8s yaml file
+            //         }
+            //     }
+            // }
         }
         stage('commit version update') {
             environment {
