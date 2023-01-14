@@ -315,8 +315,8 @@ Deploy Application to EKS Using Jenkins with ECR
 5. Update the JenkinsFile.
 
 
-Terraform-AWS-Infra
-=======================
+Deploying Terraform-AWS-Infra using Pipeline
+=============================================
 1. For server Key-Pair to connect server
     ```
     - create a key pair on aws 
