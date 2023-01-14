@@ -385,8 +385,12 @@ Terraform-AWS-Infra
         }
     ```
 6. To destroy terraform infra
-    - If you are using remote backend as s3
+    - If you are using remote backend as s3 - Tf state file will stored in s3 bucket so, every developer has the access
         ```
+        - From local inside terraform
+            terraform init
+            terraform state list
+            terraform destroy 
         ```
 
     - if you are using local backend -as it is created through Jenkins so we don't have the state file in local.
