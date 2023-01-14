@@ -1,77 +1,80 @@
 #!/usr/bin/env groovy
 
+library identifier: 'Jenkins-Shared-Library@master', retriever: modernSCM(
+    [$class: 'GitSCMSource',
+    remote: 'https://github.com/nirdeshkumar02/Jenkins-Shared-Library.git',
+    credentialsId: 'github_creds'
+    ]
+)
+
 pipeline {
     agent any
     tools {
         maven 'Maven'
     }
+    environment {
+        IMAGE_NAME = 'nirdeshkumar02/jenkins-java-app:2.1.0'
+    }
     stages {
-        stage('increment version') {
-            steps {
-                script {
-                    echo 'incrementing app version...'
-                    sh 'mvn build-helper:parse-version versions:set \
-                        -DnewVersion=\\\${parsedVersion.majorVersion}.\\\${parsedVersion.minorVersion}.\\\${parsedVersion.nextIncrementalVersion} \
-                        versions:commit'
-                    def matcher = readFile('pom.xml') =~ '<version>(.+)</version>'
-                    def version = matcher[0][1]
-                    env.IMAGE_NAME = "$version-$BUILD_NUMBER"
-                }
-            }
-        }
         stage('build app') {
             steps {
-                script {
-                    echo "building the application..."
-                    sh 'mvn clean package'
-                }
+               script {
+                  echo 'building application jar...'
+                  buildJar()
+               }
             }
         }
         stage('build image') {
             steps {
                 script {
-                    echo "building the docker image..."
-                    withCredentials([usernamePassword(credentialsId: 'docker-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-                        sh "docker build -t nirdeshkumar02/jenkins-java-app:${IMAGE_NAME} ."
-                        sh "echo $PASS | docker login -u $USER --password-stdin"
-                        sh "docker push nirdeshkumar02/jenkins-java-app:${IMAGE_NAME}"
+                   echo 'building docker image...'
+                   buildImage(env.IMAGE_NAME)
+                   dockerLogin()
+                   dockerPush(env.IMAGE_NAME)
+                }
+            }
+        }
+        stage('provision server') {
+            environment {
+                AWS_ACCESS_KEY_ID = credentials('aws_access_key')
+                AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key')
+                TF_VAR_env_prefix = 'test'
+            }
+            steps {
+                script {
+                    dir('terraform') {
+                        sh "terraform init"
+                        sh "terraform apply --auto-approve"
+                        EC2_PUBLIC_IP = sh(
+                            script: "terraform output ec2_public_ip",
+                            returnStdout: true
+                        ).trim()
                     }
                 }
             }
         }
         stage('deploy') {
+            environment {
+                DOCKER_CREDS = credentials('docker_creds')
+            }
             steps {
                 script {
-                    echo 'deploying docker image to EC2...'
-                    def dockerCmd = "docker run -p 3080:3080 -d nirdeshkumar02/jenkins-java-app:${IMAGE_NAME}"
-                    def shellCmd = "bash ./server-cmds.sh nirdeshkumar02/jenkins-java-app:${IMAGE_NAME}"
-                    def ec2Instance = "ubuntu@52.91.71.254"
-                    //  First You need to login to docker on ec2-server else you can login here with above steps
-                    sshagent(['ec2-server-key']) {
-                        sh "scp -o StrictHostKeyChecking=no server-cmds.sh ${ec2Instance}:/home/ubuntu"
-                        sh "scp -o StrictHostKeyChecking=no docker-compose.yaml ${ec2Instance}:/home/ubuntu"
-                        sh "ssh -o StrictHostKeyChecking=no ${ec2Instance} ${shellCmd}"
-                        // sh "ssh -o StrictHostKeyChecking=no ${ec2Instance} ${dockerCmd}"
+                   echo "waiting for EC2 server to initialize" 
+                   sleep(time: 90, unit: "SECONDS") 
 
-                    }
+                   echo 'deploying docker image to EC2...'
+                   echo "${EC2_PUBLIC_IP}"
+
+                   def shellCmd = "bash ./server-cmds.sh ${IMAGE_NAME} ${DOCKER_CREDS_USR} ${DOCKER_CREDS_PSW}"
+                   def ec2Instance = "ec2-user@${EC2_PUBLIC_IP}"
+
+                   sshagent(['server-ssh-key']) {
+                       sh "scp -o StrictHostKeyChecking=no server-cmds.sh ${ec2Instance}:/home/ec2-user"
+                       sh "scp -o StrictHostKeyChecking=no docker-compose.yaml ${ec2Instance}:/home/ec2-user"
+                       sh "ssh -o StrictHostKeyChecking=no ${ec2Instance} ${shellCmd}"
+                   }
                 }
             }
         }
-        // stage('commit version update') {
-        //     steps {
-        //         script {
-        //             withCredentials([usernamePassword(credentialsId: 'github-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-        //                 // git config here for the first time run
-        //                 sh 'git config --global user.email "jenkins@example.com"'
-        //                 sh 'git config --global user.name "jenkins"'
-
-        //                 sh "git remote set-url origin https://${USER}:${PASS}@github.com/nirdeshkumar02/Jenkins-Java-App.git"
-        //                 sh 'git add .'
-        //                 sh 'git commit -m "ci: version bump"'
-        //                 sh 'git push origin HEAD:versioning-pipeline'
-        //             }
-        //         }
-        //     }
-        // }
     }
 }

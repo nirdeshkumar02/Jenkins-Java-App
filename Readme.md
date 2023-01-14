@@ -314,6 +314,91 @@ Deploy Application to EKS Using Jenkins with ECR
     ```
 5. Update the JenkinsFile.
 
+
+Terraform-AWS-Infra
+=======================
+1. For server Key-Pair to connect server
+    ```
+    - create a key pair on aws 
+    - add it to the jenkins server -> Go to Jenkins Server -> create new creds -> ssh username and private key -> Give some ID
+        -> username ec2-user -> add the data of pem file to private key -> done
+    ```
+2. Install Terraform inside Jenkins Server.
+3. Create a terraform directory and add code which provision the required resource on aws
+    ```
+    Create S3 Bucket for remote backend with given name - "myapp-bucket"
+    VPC and Its related component
+    EC2 Instance and the state should be on remote
+    Refrence -  Terraform folder inside branch "infra-provision-terraform"
+    ```
+4. In Jenkinsfile Create a step for provision server and add code
+    ```
+        stage('provision server') {
+            environment {
+                # Aws Credential used to deploy infra
+                AWS_ACCESS_KEY_ID = credentials('aws_access_key') 
+                AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key')
+                # Changing env prefix variable value used in terraform config
+                TF_VAR_env_prefix = 'test'
+            }
+            steps {
+                script {
+                    dir('terraform') {
+                        sh "terraform init"
+                        sh "terraform apply --auto-approve"
+                        EC2_PUBLIC_IP = sh(
+                            # fetch server ip using tf output command
+                            script: "terraform output ec2_public_ip",
+                            returnStdout: true
+                        ).trim()
+                    }
+                }
+            }
+        }
+    ```
+5. Again, In jenkinsfile Add the step to deploy application to server
+    ```
+        stage('deploy') {
+            environment {
+                # to login in server as docker image in private repo
+                DOCKER_CREDS = credentials('docker_creds')
+            }
+            steps {
+                script {
+                   echo "waiting for EC2 server to initialize" 
+                   sleep(time: 90, unit: "SECONDS") 
+
+                   echo 'deploying docker image to EC2...'
+                   echo "${EC2_PUBLIC_IP}"
+
+                    # DOCKER_CREDS_USR and DOCKER_CREDS_PSW automatically fetched from DOCKER_CREDS of type username and password
+                   def shellCmd = "bash ./server-cmds.sh ${IMAGE_NAME} ${DOCKER_CREDS_USR} ${DOCKER_CREDS_PSW}"
+                   def ec2Instance = "ec2-user@${EC2_PUBLIC_IP}"
+
+                   sshagent(['server-ssh-key']) {
+                       sh "scp -o StrictHostKeyChecking=no server-cmds.sh ${ec2Instance}:/home/ec2-user"
+                       sh "scp -o StrictHostKeyChecking=no docker-compose.yaml ${ec2Instance}:/home/ec2-user"
+                       sh "ssh -o StrictHostKeyChecking=no ${ec2Instance} ${shellCmd}"
+                   }
+                }
+            }
+        }
+    ```
+6. To destroy terraform infra
+    - If you are using remote backend as s3
+        ```
+        ```
+
+    - if you are using local backend -as it is created through Jenkins so we don't have the state file in local.
+        ```
+        Using Jenkins pipeline with your build no.
+        Click on Replay, At stage provisioning inside dir(terraform)
+        replace the all command with single one "terraform destroy --auto-approve"
+        Comment the next stage deploy to ec2
+        Run the pipeline again
+        ```
+
+
 Build Java Project
 =======================
 
