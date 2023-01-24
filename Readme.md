@@ -403,18 +403,18 @@ Deploying Terraform-AWS-Infra using Pipeline
         ```
 
 Ansible Integration to Jenkins
-================================
+===============================
 - Previously, we integrate terraform, kubernetes inside the jenkins server
 - Now, We will create a dedicated server for Ansible and Install ansible in it.
 - Execute Ansible Playbook from Jenkins Pipeline to configure 2 EC2 Insances.
 
-### Workflow - Ansible Integration in Jenkins
+#### Workflow - Ansible Integration in Jenkins
 1. Create 2 EC2 Instances
 2. Configure Everything from scratch with Ansible
 3. Create a Pipeline in Jenkins
 4. Connect Pipeline to Java Maven Project
 
-### Execution
+#### Execution
 1. Create a Jenkins Server and configure it by installing previous used tools 
 2. Create a ansible server and install the ansible on that server.
 3. Install AWS Python Module on ansible server (boto3, botocore).
@@ -474,6 +474,34 @@ Ansible Integration to Jenkins
             }
         }
     ```
+11. Add a plugin which help us to run cli commands on remote servers.
+    ```
+    Install ssh pipeline steps on jenkins server
+    Manage Jenkins => Manage Plugins => Search ssh pipeline steps => Install it 
+    ```
+12. Add the step to Execute ansible playbook on remote host.
+    ```
+        stage("execute ansible playbook") {
+            steps {
+                script {
+                    echo "calling ansible playbook to configure ec2 instances"
+                    // Run commands on remote ec2 servers
+                    def remote = [:]
+                    remote.name = "ansible-server"
+                    remote.host = ANSIBLE_SERVER
+                    remote.allowAnyHosts = true
+
+                    withCredentials([sshUserPrivateKey(credentialsId: 'ansible_server_key', keyFileVariable: 'keyfile', usernameVariable: 'user')]){
+                        remote.user = user
+                        remote.identityFile = keyfile
+                        sshScript remote: remote, script: "prepare-ansible-server.sh"
+                        sshCommand remote: remote, command: "ansible-playbook my-playbook.yaml"
+                    }
+                }
+            }
+        }
+    ```
+13. Run the Jenkins Pipeline 
 
 
 Build Java Project
