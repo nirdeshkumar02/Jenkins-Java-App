@@ -23,6 +23,7 @@ pipeline {
             steps {
                 script {
                     echo "calling ansible playbook to configure ec2 instances"
+                    // Run commands on remote ec2 servers
                     def remote = [:]
                     remote.name = "ansible-server"
                     remote.host = ANSIBLE_SERVER
