@@ -402,6 +402,107 @@ Deploying Terraform-AWS-Infra using Pipeline
         Run the pipeline again
         ```
 
+Ansible Integration to Jenkins
+===============================
+- Previously, we integrate terraform, kubernetes inside the jenkins server
+- Now, We will create a dedicated server for Ansible and Install ansible in it.
+- Execute Ansible Playbook from Jenkins Pipeline to configure 2 EC2 Insances.
+
+#### Workflow - Ansible Integration in Jenkins
+1. Create 2 EC2 Instances
+2. Configure Everything from scratch with Ansible
+3. Create a Pipeline in Jenkins
+4. Connect Pipeline to Java Maven Project
+
+#### Execution
+1. Create a Jenkins Server and configure it by installing previous used tools 
+2. Create a ansible server and install the ansible on that server.
+3. Install AWS Python Module on ansible server (boto3, botocore).
+    ```
+    pip3 install boto3 botocore
+    ```
+4. Configure AWS Credential on the ansible server to fetch all ec2 instance using dynamic inventory.
+    ```
+    mkdir .aws
+    cd .aws
+    vim Credentials
+    Copy the content from local to this file
+    ```
+5. Create 2 Ec2 instance with amazon linux 2 image using aws console.
+6. Using Jenkinsfile configuring above created 2 servers with ansible control server.
+    ```
+    Create ansible folder and copy ansible.cfg, inventory_aws_ec2.yaml and playbook
+    ```
+7. Using sshagent plugin in jenkinsfile help us to access the server using ssh key.
+    ```
+    Install sshagent on jenkins server
+    Manage Jenkins => Manage Plugins => Search SSH Agent => Install it 
+    ```
+8. To access ansible server using jenkins add the ssh key data to jenkins credentials 
+    ```
+    How to check the pem - read the pem file data 
+
+    1. If start with "Begin Openssh Private key" - New Format and we need to change it to classic.
+    2. If start with "Begin RSA Private Key" - Classic Format and not required to change it.
+    
+    Before adding this private key data to jenkins creds, Change the format of key as openssh version upgrade everytime and ansible doesn't support that yet.
+    Run this command on local to change private key format `ssh-keygen -p -f <private file> -m pem -P "" -N ""`
+    
+    Manage Jenkins => Manage Credential => Global => SSH uesrname with private key => ID - ansible_server_key => Username - root
+    => Paste private key data directly to jenkins creds.
+    ```
+9. To Configure ec2 servers to ansible server, add the pem file of ec2-servers to jenkins
+    ```
+    Follow step no 8.
+    changes - Id - ec2_server_key, username- ec2-user and add pem data to private key.
+    ```
+10. Add the steps in jenkinsfile to copy ansible folder from local to ansible server 
+    ```
+        stage("copy files to ansible server") {
+            steps {
+                script {
+                    echo "copying all neccessary files to ansible control node"
+                    // Copy file from local to ansible server
+                    sshagent(['ansible_server_key']) {
+                        sh "scp -o StrictHostKeyChecking=no ansible/* root@${ANSIBLE_SERVER}:/root"
+                        // Copy ec2 servers private ssh key from jenkins creds
+                        withCredentials([sshUserPrivateKey(credentialsId: 'ec2-server-key', keyFileVariable: 'keyfile', usernameVariable: 'user')]) {
+                            sh 'scp $keyfile root@$ANSIBLE_SERVER:/root/ssh-key.pem'
+                        }
+                    }
+                }
+            }
+        }
+    ```
+11. Add a plugin which help us to run cli commands on remote servers.
+    ```
+    Install ssh pipeline steps on jenkins server
+    Manage Jenkins => Manage Plugins => Search ssh pipeline steps => Install it 
+    ```
+12. Add the step to Execute ansible playbook on remote host.
+    ```
+        stage("execute ansible playbook") {
+            steps {
+                script {
+                    echo "calling ansible playbook to configure ec2 instances"
+                    // Run commands on remote ec2 servers
+                    def remote = [:]
+                    remote.name = "ansible-server"
+                    remote.host = ANSIBLE_SERVER
+                    remote.allowAnyHosts = true
+
+                    withCredentials([sshUserPrivateKey(credentialsId: 'ansible_server_key', keyFileVariable: 'keyfile', usernameVariable: 'user')]){
+                        remote.user = user
+                        remote.identityFile = keyfile
+                        sshScript remote: remote, script: "prepare-ansible-server.sh"
+                        sshCommand remote: remote, command: "ansible-playbook my-playbook.yaml"
+                    }
+                }
+            }
+        }
+    ```
+13. Run the Jenkins Pipeline 
+
 
 Build Java Project
 =======================
